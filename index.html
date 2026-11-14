@@ -1,0 +1,586 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#172b42">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="百人一首">
+<meta name="mobile-web-app-capable" content="yes">
+
+<title>百人一首・全文暗記トレーナー</title>
+<style>
+  :root{--navy:#172b42;--navy2:#254565;--bg:#f6f5f1;--card:#ffffff;--ink:#243247;--muted:#64748b;--gold:#b28a49;--soft:#e9edf2;--border:#dae1e6;--red:#b54f4a;--green:#287259}
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);font-family:"Yu Gothic","Hiragino Kaku Gothic ProN","Noto Sans JP",system-ui,-apple-system,sans-serif;color:var(--ink);font-size:15px;line-height:1.65}
+  button,select,input,textarea{font:inherit}
+  button{cursor:pointer}
+  button:disabled{opacity:.48;cursor:not-allowed}
+  .wrap{max-width:1120px;padding:0 18px;margin:0 auto}
+  .hero{background:linear-gradient(135deg,#172b42,#2b4964);color:white;padding:28px 0 24px}
+  .eyebrow{font-size:12px;letter-spacing:.14em;opacity:.76}
+  .hero h1{margin:3px 0;font-size:clamp(23px,4vw,35px);font-weight:700;letter-spacing:.025em}
+  .hero p{margin:6px 0 0;color:#dce5ee;font-size:13px}
+  .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:18px auto}
+  .metric{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:12px 13px;min-width:0}
+  .metric label{display:block;font-size:11px;color:var(--muted)}
+  .metric strong{font-size:25px;line-height:1.15;font-weight:750;font-variant-numeric:tabular-nums}
+  .metric small{display:block;color:var(--muted);font-size:11px}
+  nav{display:flex;gap:6px;flex-wrap:wrap;padding:4px 0 14px;border-bottom:1px solid var(--border)}
+  nav button{border:0;background:transparent;padding:10px 16px;border-radius:10px;color:var(--muted);font-weight:700}
+  nav button.active{background:var(--navy);color:#fff}
+  .pane{display:none;padding:20px 0 45px}.pane.active{display:block}
+  h2{font-size:20px;letter-spacing:.01em;margin:0 0 4px}
+  h3{font-size:16px;margin:0 0 6px}
+  p{margin:5px 0}
+  .lead{color:var(--muted);margin-bottom:18px;font-size:13px}
+  .panel{background:#fff;border:1px solid var(--border);border-radius:16px;padding:19px}
+  .row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .row.between{justify-content:space-between}
+  .field{display:flex;flex-direction:column;gap:4px;min-width:0}
+  .field label{font-size:12px;font-weight:650;color:var(--muted)}
+  select,input[type=date],input[type=search],input[type=number],textarea{border:1px solid #bbc8d3;border-radius:9px;padding:10px;background:#fff;color:var(--ink);max-width:100%}
+  select:focus,input:focus,textarea:focus,button:focus-visible{outline:2px solid #4179aa;outline-offset:2px}
+  .toolbar{display:flex;align-items:end;gap:12px;flex-wrap:wrap;margin:0 0 15px}
+  .toolbar .field{flex:1;min-width:145px}
+  .toolbar select{width:100%}
+  .study-grid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(270px,.8fr);gap:16px}
+  .waka{border:1px solid #d8d3c7;background:linear-gradient(#fffdfa,#fff);border-radius:16px;padding:20px 20px 25px;min-height:340px}
+  .wakahead{display:flex;justify-content:space-between;gap:8px;align-items:center;color:var(--muted);font-size:12px}
+  .wakano{font-weight:800;color:var(--navy)}
+  .waka-lines{padding:12px 0 16px;display:flex;flex-direction:column;align-items:center;gap:7px;min-height:238px;justify-content:center}
+  .waka-line{text-align:center;font-family:"Yu Mincho","Hiragino Mincho ProN","Noto Serif JP",serif;font-size:clamp(22px,3vw,29px);line-height:1.5;letter-spacing:.065em;font-weight:650}
+  .waka-line.hidden{color:#aab4bf;filter:none;letter-spacing:.2em}
+  .waka-line:nth-child(4){margin-top:8px}
+  .kana{font-family:system-ui,sans-serif;font-size:12px;display:block;color:var(--muted);font-weight:400;letter-spacing:0}
+  .author{font-size:12px;text-align:center;color:var(--muted)}
+  .scorebar{height:7px;background:#e7ecf0;border-radius:9px;overflow:hidden}
+  .scorebar div{height:100%;background:var(--green);width:0;transition:width .2s}
+  .btn{border:1px solid #c5d0d9;background:#fff;color:var(--navy);border-radius:10px;padding:10px 13px;font-weight:700}
+  .btn:hover{background:#eff4f7}
+  .btn.primary{background:var(--navy);border-color:var(--navy);color:#fff}
+  .btn.primary:hover{background:var(--navy2)}
+  .btn.gold{border-color:var(--gold);color:#8c682f}
+  .btn.danger{border-color:#deafac;color:#a13b36}
+  .btn.success{border-color:#a7d8c4;color:var(--green)}
+  .btn.tiny{padding:5px 9px;font-size:12px;border-radius:7px}
+  .btn.full{width:100%}
+  .button-group{display:flex;gap:9px;flex-wrap:wrap}
+  .button-group>*{flex:1}
+  .controls{display:grid;gap:14px}
+  .controls .group{border-bottom:1px solid var(--border);padding-bottom:14px}
+  .controls .group:last-child{border:0;padding:0}
+  .small{font-size:12px;color:var(--muted)}
+  .subheading{font-size:12px;font-weight:750;color:#66788c;text-transform:uppercase;letter-spacing:.06em;margin-bottom:7px}
+  .pill{padding:4px 9px;background:#eef2f6;color:var(--navy2);border-radius:20px;font-size:12px;font-weight:600}
+  .notice{font-size:12px;border-left:3px solid var(--gold);background:#faf6ed;padding:11px 13px;margin-top:15px}
+  .test-shell{max-width:800px;margin:0 auto}
+  .test-cue{font-family:"Yu Mincho","Hiragino Mincho ProN",serif;font-size:clamp(27px,5vw,40px);text-align:center;padding:45px 10px 16px}
+  .test-result{border-top:1px solid var(--border);padding-top:13px;margin-top:16px}
+  .test-lines{font-family:"Yu Mincho","Hiragino Mincho ProN",serif;text-align:center;line-height:1.9;font-size:21px}
+  .test-controls{display:flex;gap:9px;flex-wrap:wrap;justify-content:center}
+  .test-controls button{min-width:110px}
+  #typedAnswer{width:100%;resize:vertical;min-height:85px}
+  .list-controls{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:12px}
+  .list-controls>*{min-width:180px;flex:1}
+  .poem-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+  .poem-list button{text-align:left;background:#fff;border:1px solid var(--border);border-radius:11px;padding:12px}
+  .poem-list button:hover{border-color:var(--gold);background:#fffdf8}
+  .poem-list .p-title{display:flex;align-items:center;gap:7px}
+  .poem-list .p-text{color:#4a5c6c;font-size:12px;line-height:1.45}
+  .tablewrap{overflow:auto}
+  table{width:100%;border-collapse:collapse;min-width:440px}
+  td,th{padding:11px;text-align:left;border-bottom:1px solid var(--border);font-size:13px}
+  th{background:#eff2f5;color:#4b5c6b}
+  tr.today td{background:#fff8e9}
+  footer{padding:24px;text-align:center;color:var(--muted);font-size:11px;border-top:1px solid var(--border)}
+  #toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);padding:10px 16px;background:#24364b;color:#fff;border-radius:10px;max-width:min(92vw,600px);display:none;z-index:20;box-shadow:0 8px 24px #0018;text-align:center;font-size:13px}
+  .sr{position:absolute;left:-10000px}
+  @media(max-width:740px){
+    .study-grid{grid-template-columns:1fr}
+    .metrics{grid-template-columns:repeat(2,1fr)}
+    .panel{padding:13px}
+    .waka{padding:15px;min-height:300px}
+    .waka-lines{min-height:200px}
+    .waka-line{font-size:22px}
+    .poem-list{grid-template-columns:1fr}
+    nav button{flex:1;padding:9px 4px;font-size:13px}
+  }
+</style>
+
+<style>
+  html{-webkit-text-size-adjust:100%;}
+  button{touch-action:manipulation;}
+  @media(max-width:740px){
+    input,textarea,select{font-size:16px;}
+    .btn,nav button{min-height:44px;}
+    .pane{padding-bottom:calc(38px + env(safe-area-inset-bottom, 0px));}
+  }
+</style>
+</head>
+<body>
+<header class="hero">
+ <div class="wrap">
+  <div class="eyebrow">HYAKUNIN ISSHU · 100 POEMS</div>
+  <h1>百人一首・全文暗記トレーナー</h1>
+  <p>聞く → 隠す → 声に出す → 答え合わせ → 忘れる前に復習</p>
+ </div>
+</header>
+<div class="wrap">
+  <section class="metrics" aria-label="学習状況">
+    <div class="metric"><label>学習を始めた歌</label><strong id="statStarted">0</strong><small>/ 100首</small></div>
+    <div class="metric"><label>直近で暗唱成功</label><strong id="statCorrect">0</strong><small>/ 100首</small></div>
+    <div class="metric"><label>3日以上で暗唱成功</label><strong id="statStable">0</strong><small>/ 100首（目標）</small></div>
+    <div class="metric"><label>いま復習する歌</label><strong id="statDue">0</strong><small>採点済みの歌から</small></div>
+  </section>
+  <nav aria-label="メニュー">
+    <button class="active" data-tab="study">📚 覚える</button>
+    <button data-tab="test">🎤 暗唱テスト</button>
+    <button data-tab="list">📖 100首一覧</button>
+    <button data-tab="plan">📅 7日間の計画</button>
+  </nav>
+
+  <section class="pane active" id="panel-study">
+    <h2>音声で覚えて、隠して言ってみる</h2>
+    <p class="lead">最初は全文を見ながら聞き、慣れたらヒントを減らします。</p>
+    <div class="toolbar">
+      <div class="field"><label for="studyScope">学習範囲</label><select id="studyScope">
+        <option value="today">今日の新規20首</option><option value="due">復習が必要な歌</option><option value="weak">苦手な歌</option>
+        <option value="all">100首すべて</option>
+        <option value="1">1〜20番</option><option value="2">21〜40番</option><option value="3">41〜60番</option><option value="4">61〜80番</option><option value="5">81〜100番</option>
+      </select></div>
+      <div class="field"><label for="hintMode">見せるヒント</label><select id="hintMode">
+        <option value="all">全文を見せる</option><option value="upper">上の3句だけ</option>
+        <option value="first">最初の1句だけ</option><option value="none">すべて隠す</option>
+      </select></div>
+      <div class="field"><label for="readingToggle">読みがな</label><select id="readingToggle"><option value="off">非表示</option><option value="on">表示</option></select></div>
+    </div>
+    <div class="study-grid">
+      <div class="waka">
+        <div class="wakahead"><span class="wakano" id="studyNumber">第1首</span><span class="pill" id="studyLabel">未学習</span></div>
+        <div class="waka-lines" id="studyLines"></div>
+        <div class="author" id="studyAuthor"></div>
+      </div>
+      <div class="panel controls">
+        <div class="group">
+          <div class="subheading">① まず耳で覚える</div>
+          <div class="button-group">
+            <button class="btn primary" id="listenFull">▶ 全文を聞く</button>
+            <button class="btn" id="listenUpper">▶ 上の3句</button>
+          </div>
+          <div class="button-group" style="margin-top:9px">
+            <button class="btn" id="listenFirst">▶ 最初の1句</button>
+            <button class="btn" id="stopAudio">■ 停止</button>
+          </div>
+          <p class="small">音を止めてから、続きの句を声に出して言ってみましょう。</p>
+        </div>
+        <div class="group">
+          <div class="subheading">② ヒントを隠して暗唱</div>
+          <button class="btn full gold" id="revealStudy">答えを見る（全文を表示）</button>
+          <p class="small">カードの上にある「見せるヒント」を減らしていきます。</p>
+        </div>
+        <div class="group">
+          <div class="subheading">③ 自分で採点して記録</div>
+          <div class="button-group">
+            <button class="btn success grade-study" data-grade="good">○ 言えた</button>
+            <button class="btn grade-study" data-grade="so">△ 迷った</button>
+            <button class="btn danger grade-study" data-grade="bad">× 言えない</button>
+          </div>
+          <p class="small">「○」は、答えを見る前に最後まで言えたときだけ選びましょう。</p>
+        </div>
+        <div class="group">
+          <div class="button-group">
+            <button class="btn" id="studyPrev">← 前の歌</button>
+            <button class="btn primary" id="studyNext">次の歌 →</button>
+          </div>
+          <p class="small" id="studyCounter"></p>
+        </div>
+      </div>
+    </div>
+    <div class="notice">読み上げは端末の日本語合成音声です。古語の発音・アクセントや漢字の表記には資料による違いがあるので、学校の教材を優先してください。</div>
+  </section>
+
+  <section class="pane" id="panel-test">
+    <h2>ランダム全文暗唱テスト</h2>
+    <p class="lead">最初の1句を聞き、残りの4句を見ずに言います。答えを開いて自己採点します。</p>
+    <div class="panel test-shell">
+      <div class="toolbar">
+        <div class="field"><label for="testScope">出題範囲</label><select id="testScope">
+          <option value="due">復習が必要な歌（なければ今日の歌）</option>
+          <option value="today">今日の新規20首</option><option value="weak">苦手な歌</option><option value="all">100首ランダム</option>
+          <option value="1">1〜20番</option><option value="2">21〜40番</option><option value="3">41〜60番</option><option value="4">61〜80番</option><option value="5">81〜100番</option>
+        </select></div>
+        <div class="field"><label for="testCount">問題数</label><select id="testCount"><option value="10">10首</option><option value="20">20首</option><option value="100">最大100首</option></select></div>
+        <div class="field"><label for="testFormat">回答方法</label><select id="testFormat">
+          <option value="speak">声に出して暗唱</option><option value="write">書き取り練習</option>
+        </select></div>
+      </div>
+      <button class="btn primary full" id="startTest">テスト開始 / 最初からやり直す</button>
+      <div id="testArea" style="display:none">
+        <div class="row between" style="margin-top:18px"><span class="pill" id="testCounter"></span><span class="small" id="testScore"></span></div>
+        <div class="test-cue" id="testCue"></div>
+        <div class="test-controls">
+          <button class="btn primary" id="testSpeakFirst">🔊 最初の1句を聞く</button>
+          <button class="btn" id="testShowAnswer">答えを見る</button>
+        </div>
+        <div id="writeArea" style="display:none;margin:16px auto 0">
+          <label for="typedAnswer" class="small">残り4句を入力（文字表記の練習）。正誤は答えと見比べて判断してください。</label>
+          <textarea id="typedAnswer" placeholder="ここに続きを入力…" spellcheck="false"></textarea>
+        </div>
+        <div id="answerArea" class="test-result" style="display:none">
+          <p style="text-align:center" class="subheading">正解・全文</p>
+          <div class="test-lines" id="answerLines"></div>
+          <p id="typeCompare" class="small" style="text-align:center"></p>
+          <p class="small" style="text-align:center">答えを見る前に暗唱できたかを採点</p>
+          <div class="test-controls">
+            <button class="btn success grade-test" data-grade="good">○ 完全に言えた</button>
+            <button class="btn grade-test" data-grade="so">△ 迷った</button>
+            <button class="btn danger grade-test" data-grade="bad">× 言えなかった</button>
+          </div>
+        </div>
+      </div>
+      <div id="testDone" style="display:none;padding:24px 4px;text-align:center"></div>
+    </div>
+  </section>
+
+  <section class="pane" id="panel-list">
+    <h2>100首一覧</h2>
+    <p class="lead">番号・歌の言葉・作者で検索できます。歌を選ぶと「覚える」画面に移動します。</p>
+    <div class="list-controls">
+      <input id="searchPoems" type="search" placeholder="例：春、紫式部、87">
+      <select id="filterPoems"><option value="all">すべて</option><option value="unstarted">未学習</option><option value="weak">苦手・迷った</option><option value="good">直近で正解</option><option value="stable">3日以上で成功</option></select>
+    </div>
+    <p class="small" id="listCount"></p>
+    <div class="poem-list" id="poemList"></div>
+  </section>
+
+  <section class="pane" id="panel-plan">
+    <h2>7日間の集中学習計画</h2>
+    <p class="lead">1〜5日目に20首ずつ覚え、6〜7日目は100首の復習と暗唱テストを中心にします。</p>
+    <div class="panel">
+      <div class="row between" style="margin-bottom:12px">
+        <div class="field"><label for="startDate">学習開始日（変更できます）</label><input id="startDate" type="date"></div>
+        <div><span class="pill" id="todayDay"></span></div>
+      </div>
+      <div class="tablewrap">
+        <table><thead><tr><th>日</th><th>新しく覚える歌</th><th>復習・テスト</th></tr></thead><tbody id="planRows"></tbody></table>
+      </div>
+      <h3 style="margin-top:22px">毎日のおすすめ配分（約90分）</h3>
+      <div class="tablewrap"><table><thead><tr><th>タイミング</th><th>目安</th><th>すること</th></tr></thead><tbody>
+        <tr><td>朝</td><td>25分</td><td>前日までの歌を、最初の1句から暗唱</td></tr>
+        <tr><td>夕方</td><td>45分</td><td>新しい20首を5首ずつ「聞く→隠す→暗唱」</td></tr>
+        <tr><td>寝る前</td><td>20分</td><td>苦手な歌だけをランダムテスト</td></tr>
+      </tbody></table></div>
+      <p class="small">初日や復習量が多い日は、90分を超えることがあります。1週間で100首の全文暗記は高負荷です。時間が確保できない場合は、新規10首/日・10〜14日程度に減らしてください。</p>
+    </div>
+    <div class="panel" style="margin-top:15px">
+      <h3>音声・保存の設定</h3>
+      <div class="row"><label for="rate">読み上げの速さ</label><input id="rate" type="range" min="0.65" max="1.2" step="0.05" value="0.85"><b id="rateLabel">0.85倍</b></div>
+      <p class="small">音声は端末の読み上げ機能（日本語の合成音声）を利用します。音声ファイルは不要ですが、ブラウザや端末によって利用状況が異なります。</p>
+      <h3 style="margin-top:20px">学習データのバックアップ</h3>
+      <div class="row">
+        <button id="exportData" class="btn">成績をファイルに保存</button>
+        <label class="btn" for="importData" style="cursor:pointer">保存した成績を読み込む</label>
+        <input class="sr" type="file" accept="application/json,.json" id="importData">
+        <button id="resetData" class="btn danger">成績をリセット</button>
+      </div>
+      <p class="small">成績はこの端末・このブラウザ内に保存されます。スマホとPCの間で同期はしません。端末を変えるときはファイルで移してください。</p>
+    </div>
+  </section>
+</div>
+<footer>百人一首・全文暗記トレーナー | 100首収録 · 読み上げには端末の音声機能を利用<br>© 2026 fmjapan · 制作・管理：fmjapan · 学習用</footer>
+<div id="toast" role="status" aria-live="polite"></div>
+<script>
+"use strict";
+const POEMS = [{"id":1,"lines":["秋の田の","かりほの庵の","苫をあらみ","わが衣手は","露にぬれつつ"],"readings":["あきのたの","かりおのいおの","とまをあらみ","わがころもでは","つゆにぬれつつ"],"author":"天智天皇"},{"id":2,"lines":["春過ぎて","夏来にけらし","白妙の","衣ほすてふ","天の香具山"],"readings":["はるすぎて","なつきにけらし","しろたえの","ころもほすちょう","あまのかぐやま"],"author":"持統天皇"},{"id":3,"lines":["あしびきの","山鳥の尾の","しだり尾の","ながながし夜を","ひとりかも寝む"],"readings":["あしびきの","やまどりのおの","しだりおの","ながながしよを","ひとりかもねん"],"author":"柿本人麻呂"},{"id":4,"lines":["田子の浦に","うち出でて見れば","白妙の","富士の高嶺に","雪はふりつつ"],"readings":["たごのうらに","うちいでてみれば","しろたえの","ふじのたかねに","ゆきはふりつつ"],"author":"山部赤人"},{"id":5,"lines":["奥山に","もみぢふみわけ","鳴く鹿の","声聞くときぞ","秋は悲しき"],"readings":["おくやまに","もみじふみわけ","なくしかの","こえきくときぞ","あきはかなしき"],"author":"猿丸大夫"},{"id":6,"lines":["かささぎの","渡せる橋に","おく霜の","白きを見れば","夜ぞふけにける"],"readings":["かささぎの","わたせるはしに","おくしもの","しろきをみれば","よぞふけにける"],"author":"中納言家持"},{"id":7,"lines":["天の原","ふりさけ見れば","春日なる","三笠の山に","出でし月かも"],"readings":["あまのはら","ふりさけみれば","かすがなる","みかさのやまに","いでしつきかも"],"author":"安倍仲麻呂"},{"id":8,"lines":["わが庵は","都のたつみ","しかぞすむ","世をうぢ山と","人はいふなり"],"readings":["わがいおは","みやこのたつみ","しかぞすむ","よをうじやまと","ひとはいうなり"],"author":"喜撰法師"},{"id":9,"lines":["花の色は","うつりにけりな","いたづらに","わが身よにふる","ながめせしまに"],"readings":["はなのいろは","うつりにけりな","いたずらに","わがみよにふる","ながめせしまに"],"author":"小野小町"},{"id":10,"lines":["これやこの","行くも帰るも","別れては","知るも知らぬも","逢坂の関"],"readings":["これやこの","ゆくもかえるも","わかれては","しるもしらぬも","おうさかのせき"],"author":"蝉丸"},{"id":11,"lines":["わたの原","八十島かけて","漕ぎ出でぬと","人には告げよ","あまのつり舟"],"readings":["わたのはら","やそしまかけて","こぎいでぬと","ひとにはつげよ","あまのつりぶね"],"author":"参議篁"},{"id":12,"lines":["天つ風","雲のかよひ路","吹きとぢよ","をとめの姿","しばしとどめむ"],"readings":["あまつかぜ","くものかよいじ","ふきとじよ","おとめのすがた","しばしとどめん"],"author":"僧正遍昭"},{"id":13,"lines":["つくばねの","峰よりおつる","みなの川","こひぞつもりて","淵となりぬる"],"readings":["つくばねの","みねよりおつる","みなのがわ","こいぞつもりて","ふちとなりぬる"],"author":"陽成院"},{"id":14,"lines":["みちのくの","しのぶもぢずり","誰ゆゑに","乱れそめにし","われならなくに"],"readings":["みちのくの","しのぶもじずり","たれゆえに","みだれそめにし","われならなくに"],"author":"河原左大臣"},{"id":15,"lines":["君がため","春の野に出でて","若菜つむ","わが衣手に","雪は降りつつ"],"readings":["きみがため","はるののにいでて","わかなつむ","わがころもでに","ゆきはふりつつ"],"author":"光孝天皇"},{"id":16,"lines":["たち別れ","いなばの山の","峰に生ふる","まつとし聞かば","いま帰りこむ"],"readings":["たちわかれ","いなばのやまの","みねにおうる","まつとしきかば","いまかえりこん"],"author":"中納言行平"},{"id":17,"lines":["ちはやぶる","神代もきかず","竜田川","からくれなゐに","水くくるとは"],"readings":["ちはやぶる","かみよもきかず","たつたがわ","からくれないに","みずくくるとは"],"author":"在原業平朝臣"},{"id":18,"lines":["すみの江の","岸に寄る波","よるさへや","夢のかよひ路","人目避くらむ"],"readings":["すみのえの","きしによるなみ","よるさえや","ゆめのかよいじ","ひとめよくらん"],"author":"藤原敏行朝臣"},{"id":19,"lines":["難波潟","短き芦の","ふしの間も","逢はでこの世を","過ぐしてよとや"],"readings":["なにわがた","みじかきあしの","ふしのまも","あわでこのよを","すぐしてよとや"],"author":"伊勢"},{"id":20,"lines":["わびぬれば","いまはたおなじ","難波なる","みをつくしても","あはむとぞ思ふ"],"readings":["わびぬれば","いまはたおなじ","なにわなる","みをつくしても","あわんとぞおもう"],"author":"元良親王"},{"id":21,"lines":["いま来むと","いひしばかりに","長月の","ありあけの月を","待ち出でつるかな"],"readings":["いまこんと","いいしばかりに","ながつきの","ありあけのつきを","まちいでつるかな"],"author":"素性法師"},{"id":22,"lines":["吹くからに","秋の草木の","しをるれば","むべ山風を","嵐といふらむ"],"readings":["ふくからに","あきのくさきの","しおるれば","むべやまかぜを","あらしというらん"],"author":"文屋康秀"},{"id":23,"lines":["月見れば","ちぢに物こそ","悲しけれ","わが身ひとつの","秋にはあらねど"],"readings":["つきみれば","ちじにものこそ","かなしけれ","わがみひとつの","あきにはあらねど"],"author":"大江千里"},{"id":24,"lines":["このたびは","ぬさもとりあへず","手向山","もみぢのにしき","神のまにまに"],"readings":["このたびは","ぬさもとりあえず","たむけやま","もみじのにしき","かみのまにまに"],"author":"菅家"},{"id":25,"lines":["なにしおはば","逢坂山の","さねかづら","人に知られで","くるよしもがな"],"readings":["なにしおわば","おうさかやまの","さねかずら","ひとにしられで","くるよしもがな"],"author":"三条右大臣"},{"id":26,"lines":["小倉山","峰のもみぢ葉","心あらば","いまひとたびの","みゆき待たなむ"],"readings":["おぐらやま","みねのもみじば","こころあらば","いまひとたびの","みゆきまたなん"],"author":"貞信公"},{"id":27,"lines":["みかの原","わきて流るる","いづみ川","いつ見きとてか","恋しかるらむ"],"readings":["みかのはら","わきてながるる","いずみがわ","いつみきとてか","こいしかるらん"],"author":"中納言兼輔"},{"id":28,"lines":["山里は","冬ぞさびしさ","まさりける","人めも草も","かれぬと思へば"],"readings":["やまざとは","ふゆぞさびしさ","まさりける","ひとめもくさも","かれぬとおもえば"],"author":"源宗于朝臣"},{"id":29,"lines":["心あてに","折らばや折らむ","初霜の","おきまどはせる","白菊の花"],"readings":["こころあてに","おらばやおらん","はつしもの","おきまどわせる","しらぎくのはな"],"author":"凡河内躬恒"},{"id":30,"lines":["有明の","つれなく見えし","別れより","あかつきばかり","憂きものはなし"],"readings":["ありあけの","つれなくみえし","わかれより","あかつきばかり","うきものはなし"],"author":"壬生忠岑"},{"id":31,"lines":["朝ぼらけ","有明の月と","見るまでに","吉野の里に","降れる白雪"],"readings":["あさぼらけ","ありあけのつきと","みるまでに","よしののさとに","ふれるしらゆき"],"author":"坂上是則"},{"id":32,"lines":["山川に","風のかけたる","しがらみは","流れもあへぬ","もみぢなりけり"],"readings":["やまがわに","かぜのかけたる","しがらみは","ながれもあえぬ","もみじなりけり"],"author":"春道列樹"},{"id":33,"lines":["ひさかたの","光のどけき","春の日に","しづ心なく","花の散るらむ"],"readings":["ひさかたの","ひかりのどけき","はるのひに","しずごころなく","はなのちるらん"],"author":"紀友則"},{"id":34,"lines":["誰をかも","知る人にせむ","高砂の","松も昔の","友ならなくに"],"readings":["たれをかも","しるひとにせん","たかさごの","まつもむかしの","ともならなくに"],"author":"藤原興風"},{"id":35,"lines":["人はいさ","心もしらず","ふるさとは","花ぞ昔の","香ににほひける"],"readings":["ひとはいさ","こころもしらず","ふるさとは","はなぞむかしの","かににおいける"],"author":"紀貫之"},{"id":36,"lines":["夏の夜は","まだ宵ながら","明けぬるを","雲のいづこに","月宿るらむ"],"readings":["なつのよは","まだよいながら","あけぬるを","くものいずこに","つきやどるらん"],"author":"清原深養父"},{"id":37,"lines":["白露に","風の吹きしく","秋の野は","つらぬきとめぬ","玉ぞ散りける"],"readings":["しらつゆに","かぜのふきしく","あきののは","つらぬきとめぬ","たまぞちりける"],"author":"文屋朝康"},{"id":38,"lines":["忘らるる","身をば思はず","ちかひてし","人の命の","惜しくもあるかな"],"readings":["わすらるる","みをばおもわず","ちかいてし","ひとのいのちの","おしくもあるかな"],"author":"右近"},{"id":39,"lines":["浅茅生の","小野の篠原","しのぶれど","あまりてなどか","人の恋しき"],"readings":["あさじうの","おののしのはら","しのぶれど","あまりてなどか","ひとのこいしき"],"author":"参議等"},{"id":40,"lines":["しのぶれど","色に出でにけり","わが恋は","物や思ふと","人のとふまで"],"readings":["しのぶれど","いろにいでにけり","わがこいは","ものやおもうと","ひとのとうまで"],"author":"平兼盛"},{"id":41,"lines":["恋すてふ","わが名はまだき","立ちにけり","人しれずこそ","思ひそめしか"],"readings":["こいすちょう","わがなはまだき","たちにけり","ひとしれずこそ","おもいそめしか"],"author":"壬生忠見"},{"id":42,"lines":["契りきな","かたみに袖を","しぼりつつ","末の松山","波こさじとは"],"readings":["ちぎりきな","かたみにそでを","しぼりつつ","すえのまつやま","なみこさじとは"],"author":"清原元輔"},{"id":43,"lines":["あひみての","後の心に","くらぶれば","昔は物を","思はざりけり"],"readings":["あいみての","のちのこころに","くらぶれば","むかしはものを","おもわざりけり"],"author":"権中納言敦忠"},{"id":44,"lines":["逢ふことの","たえてしなくば","なかなかに","人をも身をも","恨みざらまし"],"readings":["おうことの","たえてしなくば","なかなかに","ひとをもみをも","うらみざらまし"],"author":"中納言朝忠"},{"id":45,"lines":["あはれとも","いふべき人は","思ほえで","身のいたづらに","なりぬべきかな"],"readings":["あわれとも","いうべきひとは","おもおえで","みのいたずらに","なりぬべきかな"],"author":"謙徳公"},{"id":46,"lines":["由良のとを","わたる舟人","かぢをたえ","ゆくへもしらぬ","恋の道かな"],"readings":["ゆらのとを","わたるふなびと","かじをたえ","ゆくえもしらぬ","こいのみちかな"],"author":"曾禰好忠"},{"id":47,"lines":["八重葎","しげれる宿の","さびしきに","人こそ見えね","秋は来にけり"],"readings":["やえむぐら","しげれるやどの","さびしきに","ひとこそみえね","あきはきにけり"],"author":"恵慶法師"},{"id":48,"lines":["風をいたみ","岩うつ波の","おのれのみ","くだけて物を","思ふころかな"],"readings":["かぜをいたみ","いわうつなみの","おのれのみ","くだけてものを","おもうころかな"],"author":"源重之"},{"id":49,"lines":["みかきもり","衛士のたく火の","夜はもえ","昼は消えつつ","物をこそ思へ"],"readings":["みかきもり","えじのたくひの","よるはもえ","ひるはきえつつ","ものをこそおもえ"],"author":"大中臣能宣朝臣"},{"id":50,"lines":["君がため","惜しからざりし","命さへ","長くもがなと","思ひけるかな"],"readings":["きみがため","おしからざりし","いのちさえ","ながくもがなと","おもいけるかな"],"author":"藤原義孝"},{"id":51,"lines":["かくとだに","えやはいぶきの","さしも草","さしもしらじな","もゆる思ひを"],"readings":["かくとだに","えやはいぶきの","さしもぐさ","さしもしらじな","もゆるおもいを"],"author":"藤原実方朝臣"},{"id":52,"lines":["明けぬれば","暮るるものとは","知りながら","なほ恨めしき","朝ぼらけかな"],"readings":["あけぬれば","くるるものとは","しりながら","なおうらめしき","あさぼらけかな"],"author":"藤原道信朝臣"},{"id":53,"lines":["嘆きつつ","ひとりぬる夜の","明くるまは","いかに久しき","ものとかはしる"],"readings":["なげきつつ","ひとりぬるよの","あくるまは","いかにひさしき","ものとかわしる"],"author":"右大将道綱母"},{"id":54,"lines":["忘れじの","ゆくすゑまでは","かたければ","けふをかぎりの","いのちともがな"],"readings":["わすれじの","ゆくすえまでは","かたければ","きょうをかぎりの","いのちともがな"],"author":"儀同三司母"},{"id":55,"lines":["滝の音は","たえて久しく","なりぬれど","名こそ流れて","なほ聞こえけれ"],"readings":["たきのおとは","たえてひさしく","なりぬれど","なこそながれて","なおきこえけれ"],"author":"大納言公任"},{"id":56,"lines":["あらざらむ","この世のほかの","思ひ出に","今ひとたびの","あふこともがな"],"readings":["あらざらん","このよのほかの","おもいでに","いまひとたびの","おうこともがな"],"author":"和泉式部"},{"id":57,"lines":["めぐりあひて","見しやそれとも","わかぬまに","雲がくれにし","夜半の月かな"],"readings":["めぐりあいて","みしやそれとも","わかぬまに","くもがくれにし","よわのつきかな"],"author":"紫式部"},{"id":58,"lines":["ありま山","ゐなの笹原","風吹けば","いでそよ人を","忘れやはする"],"readings":["ありまやま","いなのささはら","かぜふけば","いでそよひとを","わすれやはする"],"author":"大弐三位"},{"id":59,"lines":["やすらはで","寝なましものを","さ夜ふけて","かたぶくまでの","月をみしかな"],"readings":["やすらわで","ねなましものを","さよふけて","かたぶくまでの","つきをみしかな"],"author":"赤染衛門"},{"id":60,"lines":["大江山","いく野の道の","遠ければ","まだふみも見ず","天の橋立"],"readings":["おおえやま","いくののみちの","とおければ","まだふみもみず","あまのはしだて"],"author":"小式部内侍"},{"id":61,"lines":["いにしへの","奈良の都の","八重ざくら","けふ九重に","にほひぬるかな"],"readings":["いにしえの","ならのみやこの","やえざくら","きょうここのえに","においぬるかな"],"author":"伊勢大輔"},{"id":62,"lines":["夜をこめて","鳥のそらねは","はかるとも","よに逢坂の","関はゆるさじ"],"readings":["よをこめて","とりのそらねは","はかるとも","よにおうさかの","せきはゆるさじ"],"author":"清少納言"},{"id":63,"lines":["いまはただ","思ひ絶えなむと","ばかりを","人づてならで","言ふよしもがな"],"readings":["いまはただ","おもいたえなんと","ばかりを","ひとずてならで","いうよしもがな"],"author":"左京大夫道雅"},{"id":64,"lines":["朝ぼらけ","宇治の川霧","絶え絶えに","あらはれわたる","瀬々のあじろ木"],"readings":["あさぼらけ","うじのかわぎり","たえだえに","あらわれわたる","せぜのあじろぎ"],"author":"権中納言定頼"},{"id":65,"lines":["恨みわび","ほさぬ袖だに","あるものを","恋に朽ちなむ","名こそ惜しけれ"],"readings":["うらみわび","ほさぬそでだに","あるものを","こいにくちなん","なこそおしけれ"],"author":"相模"},{"id":66,"lines":["もろともに","あはれと思へ","山ざくら","花よりほかに","しる人もなし"],"readings":["もろともに","あわれとおもえ","やまざくら","はなよりほかに","しるひともなし"],"author":"大僧正行尊"},{"id":67,"lines":["春の夜の","ゆめばかりなる","手枕に","かひなくたたむ","名こそをしけれ"],"readings":["はるのよの","ゆめばかりなる","たまくらに","かいなくたたん","なこそおしけれ"],"author":"周防内侍"},{"id":68,"lines":["心にも","あらでうき世に","ながらへば","恋しかるべき","夜半の月かな"],"readings":["こころにも","あらでうきよに","ながらえば","こいしかるべき","よわのつきかな"],"author":"三条院"},{"id":69,"lines":["あらし吹く","三室の山の","もみぢ葉は","竜田の川の","錦なりけり"],"readings":["あらしふく","みむろのやまの","もみじばは","たつたのかわの","にしきなりけり"],"author":"能因法師"},{"id":70,"lines":["さびしさに","宿をたち出でて","ながむれば","いづこもおなじ","秋の夕ぐれ"],"readings":["さびしさに","やどをたちいでて","ながむれば","いずこもおなじ","あきのゆうぐれ"],"author":"良暹法師"},{"id":71,"lines":["夕されば","門田の稲葉","おとづれて","芦のまろやに","秋風ぞ吹く"],"readings":["ゆうされば","かどたのいなば","おとずれて","あしのまろやに","あきかぜぞふく"],"author":"大納言経信"},{"id":72,"lines":["音にきく","たかしの浜の","あだ波は","かけじや袖の","ぬれもこそすれ"],"readings":["おとにきく","たかしのはまの","あだなみは","かけじやそでの","ぬれもこそすれ"],"author":"祐子内親王家紀伊"},{"id":73,"lines":["高砂の","尾上の桜","咲きにけり","外山の霞","たたずもあらなむ"],"readings":["たかさごの","おのえのさくら","さきにけり","とやまのかすみ","たたずもあらなん"],"author":"権中納言匡房"},{"id":74,"lines":["憂かりける","人を初瀬の","山おろし","はげしかれとは","祈らぬものを"],"readings":["うかりける","ひとをはつせの","やまおろし","はげしかれとは","いのらぬものを"],"author":"源俊頼朝臣"},{"id":75,"lines":["契りおきし","させもが露を","いのちにて","あはれ今年の","秋もいぬめり"],"readings":["ちぎりおきし","させもがつゆを","いのちにて","あわれことしの","あきもいぬめり"],"author":"藤原基俊"},{"id":76,"lines":["わたの原","漕ぎ出でて見れば","久方の","雲ゐにまがふ","沖つ白波"],"readings":["わたのはら","こぎいでてみれば","ひさかたの","くもいにまごう","おきつしらなみ"],"author":"法性寺入道前関白太政大臣"},{"id":77,"lines":["瀬をはやみ","岩にせかるる","滝川の","われても末に","あはむとぞ思ふ"],"readings":["せをはやみ","いわにせかるる","たきがわの","われてもすえに","あわんとぞおもう"],"author":"崇徳院"},{"id":78,"lines":["淡路島","かよふ千鳥の","鳴く声に","幾夜ねざめぬ","須磨の関守"],"readings":["あわじしま","かようちどりの","なくこえに","いくよねざめぬ","すまのせきもり"],"author":"源兼昌"},{"id":79,"lines":["秋風に","たなびく雲の","たえ間より","もれ出づる月の","影のさやけさ"],"readings":["あきかぜに","たなびくくもの","たえまより","もれいずるつきの","かげのさやけさ"],"author":"左京大夫顕輔"},{"id":80,"lines":["長からむ","心もしらず","黒髪の","みだれて今朝は","物をこそ思へ"],"readings":["ながからん","こころもしらず","くろかみの","みだれてけさは","ものをこそおもえ"],"author":"待賢門院堀川"},{"id":81,"lines":["ほととぎす","鳴きつる方を","ながむれば","ただありあけの","月ぞ残れる"],"readings":["ほととぎす","なきつるかたを","ながむれば","ただありあけの","つきぞのこれる"],"author":"後徳大寺左大臣"},{"id":82,"lines":["思ひわび","さても命は","あるものを","憂きにたへぬは","涙なりけり"],"readings":["おもいわび","さてもいのちは","あるものを","うきにたえぬは","なみだなりけり"],"author":"道因法師"},{"id":83,"lines":["世の中よ","道こそなけれ","思ひ入る","山の奥にも","鹿ぞ鳴くなる"],"readings":["よのなかよ","みちこそなけれ","おもいいる","やまのおくにも","しかぞなくなる"],"author":"皇太后宮大夫俊成"},{"id":84,"lines":["ながらへば","またこのごろや","しのばれむ","憂しと見し世ぞ","今は恋しき"],"readings":["ながらえば","またこのごろや","しのばれん","うしとみしよぞ","いまはこいしき"],"author":"藤原清輔朝臣"},{"id":85,"lines":["夜もすがら","物思ふころは","明けやらで","閨のひまさへ","つれなかりけり"],"readings":["よもすがら","ものおもうころは","あけやらで","ねやのひまさえ","つれなかりけり"],"author":"俊恵法師"},{"id":86,"lines":["嘆けとて","月やは物を","思はする","かこち顔なる","わが涙かな"],"readings":["なげけとて","つきやはものを","おもわする","かこちがおなる","わがなみだかな"],"author":"西行法師"},{"id":87,"lines":["村雨の","露もまだ干ぬ","まきの葉に","霧たちのぼる","秋の夕ぐれ"],"readings":["むらさめの","つゆもまだひぬ","まきのはに","きりたちのぼる","あきのゆうぐれ"],"author":"寂蓮法師"},{"id":88,"lines":["難波江の","芦のかりねの","ひとよゆゑ","みをつくしてや","恋ひわたるべき"],"readings":["なにわえの","あしのかりねの","ひとよゆえ","みをつくしてや","こいわたるべき"],"author":"皇嘉門院別当"},{"id":89,"lines":["玉のをよ","たえなばたえね","ながらへば","忍ぶることの","弱りもぞする"],"readings":["たまのおよ","たえなばたえね","ながらえば","しのぶることの","よわりもぞする"],"author":"式子内親王"},{"id":90,"lines":["見せばやな","雄島のあまの","袖だにも","ぬれにぞぬれし","色はかはらず"],"readings":["みせばやな","おじまのあまの","そでだにも","ぬれにぞぬれし","いろはかわらず"],"author":"殷富門院大輔"},{"id":91,"lines":["きりぎりす","鳴くや霜夜の","さむしろに","衣かたしき","ひとりかも寝む"],"readings":["きりぎりす","なくやしもよの","さむしろに","ころもかたしき","ひとりかもねん"],"author":"後京極摂政前太政大臣"},{"id":92,"lines":["わが袖は","潮干にみえぬ","沖の石の","人こそしらね","かわくまもなし"],"readings":["わがそでは","しおひにみえぬ","おきのいしの","ひとこそしらね","かわくまもなし"],"author":"二条院讃岐"},{"id":93,"lines":["世の中は","つねにもがもな","なぎさ漕ぐ","あまの小舟の","綱手かなしも"],"readings":["よのなかは","つねにもがもな","なぎさこぐ","あまのおぶねの","つなでかなしも"],"author":"鎌倉右大臣"},{"id":94,"lines":["み吉野の","山の秋風","さ夜ふけて","ふるさと寒く","衣うつなり"],"readings":["みよしのの","やまのあきかぜ","さよふけて","ふるさとさむく","ころもうつなり"],"author":"参議雅経"},{"id":95,"lines":["おほけなく","うき世の民に","おほふかな","わが立つ杣に","墨染の袖"],"readings":["おおけなく","うきよのたみに","おおうかな","わがたつそまに","すみぞめのそで"],"author":"前大僧正慈円"},{"id":96,"lines":["花さそふ","嵐の庭の","雪ならで","ふりゆくものは","わが身なりけり"],"readings":["はなさそう","あらしのにわの","ゆきならで","ふりゆくものは","わがみなりけり"],"author":"入道前太政大臣"},{"id":97,"lines":["来ぬ人を","まつほの浦の","夕なぎに","焼くやもしほの","身もこがれつつ"],"readings":["こぬひとを","まつほのうらの","ゆうなぎに","やくやもしおの","みもこがれつつ"],"author":"権中納言定家"},{"id":98,"lines":["風そよぐ","ならの小川の","夕ぐれは","みそぎぞ夏の","しるしなりける"],"readings":["かぜそよぐ","ならのおがわの","ゆうぐれは","みそぎぞなつの","しるしなりける"],"author":"従二位家隆"},{"id":99,"lines":["人もをし","人もうらめし","あぢきなく","世を思ふゆゑに","物思ふ身は"],"readings":["ひともおし","ひともうらめし","あじきなく","よをおもうゆえに","ものおもうみは"],"author":"後鳥羽院"},{"id":100,"lines":["ももしきや","古き軒端の","しのぶにも","なほあまりある","昔なりけり"],"readings":["ももしきや","ふるきのきばの","しのぶにも","なおあまりある","むかしなりけり"],"author":"順徳院"}];
+const KEY="hyakunin_100_fullmemory_v1";
+const $=(s)=>document.querySelector(s);
+const $$=(s)=>Array.from(document.querySelectorAll(s));
+const todayLocal=()=>{
+  const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+};
+const defaultState=()=>({startDate:todayLocal(), rate:0.85, scores:{}});
+function load(){
+  try{
+    const d=JSON.parse(localStorage.getItem(KEY)||"null");
+    if(d && typeof d==="object" && typeof d.startDate==="string" && typeof d.scores==="object")
+      return {startDate:d.startDate, rate:typeof d.rate==="number"?d.rate:0.85, scores:d.scores};
+  }catch(e){ }
+  return defaultState();
+}
+let state=load();
+function save(){
+  try{localStorage.setItem(KEY,JSON.stringify(state));}
+  catch(e){toast("自動保存が使えない環境です。成績をファイルに保存してください。");}
+}
+function toast(message){
+  const t=$("#toast");t.textContent=message;t.style.display="block";
+  clearTimeout(toast.t);toast.t=setTimeout(()=>{t.style.display="none"},3400);
+}
+function esc(x){return String(x).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function getScore(id){return state.scores[id]||{attempts:0,correct:0,wrong:0,hesitant:0,streak:0,correctDays:[],lastGrade:null,nextReviewAt:null};}
+function isStable(s){return (s.correctDays||[]).length>=3 && s.lastGrade==="good";}
+function isDue(s){return s.attempts>0 && (!s.nextReviewAt || Date.parse(s.nextReviewAt)<=Date.now());}
+function gradeLabel(s){
+  if(!s.attempts)return "未学習";
+  if(isStable(s))return "3日以上で成功";
+  if(s.lastGrade==="good")return "直近で暗唱成功";
+  if(s.lastGrade==="so")return "迷った";
+  return "要復習";
+}
+function grade(id,g,qualifies=true){
+  const s={...getScore(id)};
+  s.correctDays=Array.isArray(s.correctDays)?s.correctDays:[];
+  s.attempts++;s.lastGrade=g;
+  let minutes;
+  if(g==="good"){
+    s.correct++;s.streak++;
+    if(qualifies && !s.correctDays.includes(todayLocal()))s.correctDays.push(todayLocal());
+    const waits=[0,24*60,3*24*60,7*24*60,14*24*60];
+    minutes=waits[Math.min(s.streak,4)];
+  }else if(g==="so"){s.hesitant++;s.streak=0;minutes=12*60;}
+  else{s.wrong++;s.streak=0;minutes=10;}
+  s.nextReviewAt=new Date(Date.now()+minutes*60000).toISOString();
+  state.scores[id]=s;save();refreshStats();
+  return s;
+}
+function dayNumber(){
+  const a=new Date(state.startDate+"T12:00:00");
+  const b=new Date(todayLocal()+"T12:00:00");
+  if(!Number.isFinite(a.valueOf()))return 1;
+  return Math.floor((b-a)/86400000)+1;
+}
+function currentBlock(){return Math.min(5,Math.max(1,dayNumber()));}
+function block(n){return POEMS.filter(p=>p.id>(n-1)*20 && p.id<=n*20);}
+function poolFor(scope){
+  if(scope==="all")return POEMS.slice();
+  if(/^[1-5]$/.test(scope))return block(Number(scope));
+  if(scope==="today")return dayNumber()>5 ? POEMS.slice() : block(currentBlock());
+  if(scope==="due")return POEMS.filter(p=>isDue(getScore(p.id))).sort((a,b)=>{
+    const x=getScore(a.id),y=getScore(b.id);return (x.lastGrade==="bad"?-2:x.lastGrade==="so"?-1:0)-(y.lastGrade==="bad"?-2:y.lastGrade==="so"?-1:0);
+  });
+  if(scope==="weak")return POEMS.filter(p=>{
+    const s=getScore(p.id); return s.attempts>0 && (s.lastGrade!=="good" || !isStable(s));
+  }).sort((a,b)=>getScore(b.id).wrong-getScore(a.id).wrong);
+  return block(currentBlock());
+}
+function usablePool(scope){
+  let arr=poolFor(scope);
+  if(!arr.length){arr=dayNumber()>5?POEMS.slice():block(currentBlock());toast("該当する歌がまだないため、今日の学習範囲を表示します。");}
+  return arr;
+}
+function refreshStats(){
+ const all=POEMS.map(p=>getScore(p.id));
+ $("#statStarted").textContent=all.filter(s=>s.attempts>0).length;
+ $("#statCorrect").textContent=all.filter(s=>s.lastGrade==="good").length;
+ $("#statStable").textContent=all.filter(isStable).length;
+ $("#statDue").textContent=all.filter(isDue).length;
+}
+let studySeq=[],studyPos=0,revealedStudy=false;
+function setStudyPool(preferId){
+  studySeq=usablePool($("#studyScope").value);
+  studyPos=preferId ? Math.max(0,studySeq.findIndex(p=>p.id===preferId)) : 0;
+  revealedStudy=false;renderStudy();
+}
+function currentStudy(){return studySeq[studyPos]||POEMS[0];}
+function renderStudy(){
+ const p=currentStudy();if(!p)return;
+ const hint=$("#hintMode").value;
+ const n=hint==="all"?5:hint==="upper"?3:hint==="first"?1:0;
+ const kana=$("#readingToggle").value==="on";
+ $("#studyNumber").textContent=`第${p.id}首`;
+ $("#studyLabel").textContent=gradeLabel(getScore(p.id));
+ $("#studyAuthor").textContent=p.author;
+ $("#studyCounter").textContent=`現在の範囲 ${studyPos+1} / ${studySeq.length}首`;
+ $("#studyLines").innerHTML=p.lines.map((line,i)=>{
+   const display=revealedStudy||i<n;
+   return `<div class="waka-line ${display?"":"hidden"}">${display?esc(line):"□□□□□□□"}${kana && display?`<span class="kana">${esc(p.readings[i])}</span>`:""}</div>`;
+ }).join("");
+ $("#revealStudy").textContent=revealedStudy?"答えを隠す（設定に戻す）":"答えを見る（全文を表示）";
+}
+function stepStudy(dir){
+  if(!studySeq.length)return;
+  studyPos=(studyPos+dir+studySeq.length)%studySeq.length;
+  revealedStudy=false;renderStudy();
+}
+function selectPoem(id){
+  switchTab("study");$("#studyScope").value="all";setStudyPool(id);
+  window.scrollTo({top:180,behavior:"smooth"});
+}
+function speechAvailable(){return typeof window.speechSynthesis!=="undefined"&&typeof window.SpeechSynthesisUtterance!=="undefined";}
+function speakLines(lines){
+ if(!speechAvailable()){toast("このブラウザは音声読み上げに対応していません。ChromeかEdgeなどでお試しください。");return;}
+ try{
+   window.speechSynthesis.cancel();
+   const u=new SpeechSynthesisUtterance(lines.join("、")+"。");
+   u.lang="ja-JP";u.rate=Number(state.rate)||0.85;u.pitch=1;u.volume=1;
+   const vs=window.speechSynthesis.getVoices();
+   const v=vs.find(v=>v.lang==="ja-JP")||vs.find(v=>v.lang.startsWith("ja"));
+   if(v)u.voice=v;
+   u.onerror=()=>toast("音声を再生できませんでした。端末の日本語音声設定を確認してください。");
+   window.speechSynthesis.speak(u);
+ }catch(e){toast("音声が利用できませんでした。ブラウザの設定を確認してください。");}
+}
+function stopSpeak(){if(speechAvailable())window.speechSynthesis.cancel();}
+function switchTab(tab){
+ stopSpeak();
+ $$("nav [data-tab]").forEach(b=>b.classList.toggle("active",b.dataset.tab===tab));
+ $$(".pane").forEach(p=>p.classList.toggle("active",p.id==="panel-"+tab));
+ if(tab==="list")renderList();
+ if(tab==="plan")renderPlan();
+}
+let test={items:[],at:0,grades:[],revealed:false};
+function shuffle(items){
+ let a=items.slice();
+ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+ return a;
+}
+function startTest(){
+ test={items:shuffle(usablePool($("#testScope").value)).slice(0,Number($("#testCount").value)),at:0,grades:[],revealed:false};
+ $("#testDone").style.display="none";$("#testArea").style.display="block";
+ renderTest();
+}
+function currentTest(){return test.items[test.at];}
+function renderTest(){
+ const p=currentTest();stopSpeak();
+ if(!p){finishTest();return;}
+ test.revealed=false;
+ $("#testCounter").textContent=`第 ${test.at+1} 問 / ${test.items.length} 問`;
+ $("#testScore").textContent=`○ ${test.grades.filter(x=>x==="good").length} / △ ${test.grades.filter(x=>x==="so").length} / × ${test.grades.filter(x=>x==="bad").length}`;
+ $("#testCue").textContent=p.lines[0];
+ $("#answerArea").style.display="none";
+ $("#writeArea").style.display=$("#testFormat").value==="write"?"block":"none";
+ $("#typedAnswer").value="";
+}
+function showTestAnswer(){
+ const p=currentTest();if(!p)return;
+ test.revealed=true;$("#answerArea").style.display="block";
+ $("#answerLines").innerHTML=p.lines.map((l,i)=>`<div>${esc(l)}</div>`).join("");
+ const text=$("#typedAnswer").value.trim();
+ const expected=p.lines.slice(1).join("");
+ const clean=s=>s.replace(/[\s　、。・!！?？,，]/g,"");
+ $("#typeCompare").textContent=$("#testFormat").value==="write" && text?
+ (clean(text)===clean(expected)?"入力した文字は表示された正解と完全一致しました。":"文字の違いがあります。正解を見比べてください（ひらがな入力と漢字の違いも不一致扱い）。"):"";
+}
+function finishTest(){
+ $("#testArea").style.display="none";$("#testDone").style.display="block";
+ const a=test.grades;
+ $("#testDone").innerHTML=`<h3>おつかれさま！　${a.length}首をテストしました</h3>
+ <p>完全に言えた：<b>${a.filter(x=>x==="good").length}</b>首 ／ 迷った：<b>${a.filter(x=>x==="so").length}</b>首 ／ 言えない：<b>${a.filter(x=>x==="bad").length}</b>首</p>
+ <p class="small">迷った歌と間違えた歌は、復習範囲に追加されます。</p>
+ <button class="btn primary" id="goWeak">苦手な歌を復習する</button>`;
+ $("#goWeak").onclick=()=>{switchTab("study");$("#studyScope").value="weak";setStudyPool();};
+}
+function testGrade(g){
+ if(!test.revealed){toast("まず答えを表示して確認してください。");return;}
+ const p=currentTest();grade(p.id,g,true);test.grades.push(g);test.at++;renderTest();
+}
+function renderList(){
+ const q=$("#searchPoems").value.trim().toLowerCase();
+ const f=$("#filterPoems").value;
+ const list=POEMS.filter(p=>{
+   const s=getScore(p.id);
+   if(f==="unstarted" && s.attempts)return false;
+   if(f==="weak" && (s.attempts===0 || isStable(s) || s.lastGrade==="good"))return false;
+   if(f==="good" && s.lastGrade!=="good")return false;
+   if(f==="stable" && !isStable(s))return false;
+   return (p.id+" "+p.lines.join(" ")+" "+p.author+" "+p.readings.join(" ")).toLowerCase().includes(q);
+ });
+ $("#listCount").textContent=`${list.length}首を表示`;
+ $("#poemList").innerHTML=list.map(p=>`<button data-id="${p.id}"><div class="p-title">
+    <b>第${p.id}首</b><span class="pill">${esc(gradeLabel(getScore(p.id)))}</span></div>
+    <div>${esc(p.lines.slice(0,3).join("　"))}</div>
+    <div class="p-text">${esc(p.lines.slice(3).join("　"))}　｜ ${esc(p.author)}</div>
+ </button>`).join("");
+ $$("#poemList button").forEach(b=>b.onclick=()=>selectPoem(Number(b.dataset.id)));
+}
+const plans=[
+ ["1〜20番","1〜20番を夜にもう一度"],
+ ["21〜40番","1〜20番の口頭テスト"],
+ ["41〜60番","1〜40番の苦手な歌"],
+ ["61〜80番","1〜60番のランダム復習"],
+ ["81〜100番","1〜80番のランダム復習"],
+ ["なし","全100首をランダム暗唱"],
+ ["なし","不正解・迷った歌＋全体確認"]
+];
+function renderPlan(){
+ const d=dayNumber();
+ $("#startDate").value=state.startDate;
+ $("#todayDay").textContent=d>=1&&d<=7?`現在 ${d}日目`:d<1?"開始日前":"8日目以降：復習継続";
+ $("#planRows").innerHTML=plans.map(([n,r],i)=>`<tr class="${d===i+1?"today":""}"><td>${i+1}日目</td><td>${n}</td><td>${r}</td></tr>`).join("");
+ $("#rate").value=state.rate;$("#rateLabel").textContent=Number(state.rate).toFixed(2)+"倍";
+}
+function downloadBackup(){
+ const obj={version:1,exportedAt:new Date().toISOString(),startDate:state.startDate,rate:state.rate,scores:state.scores};
+ const blob=new Blob([JSON.stringify(obj,null,2)],{type:"application/json"});
+ const url=URL.createObjectURL(blob);const a=document.createElement("a");
+ a.href=url;a.download="hyakunin-progress-"+todayLocal()+".json";document.body.appendChild(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),1500);
+ toast("成績のバックアップを書き出しました。");
+}
+function initialize(){
+ refreshStats();
+ const day=dayNumber();
+ if(day>5)$("#studyScope").value="due";
+ setStudyPool();
+ $$("#panel-study .grade-study").forEach(b=>b.onclick=()=>{grade(currentStudy().id,b.dataset.grade,!revealedStudy && ["first","none"].includes($("#hintMode").value));stepStudy(1);toast("記録しました。次の歌へ進みます。");});
+ $$("nav [data-tab]").forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
+ $("#studyScope").onchange=()=>setStudyPool();
+ $("#hintMode").onchange=()=>{revealedStudy=false;renderStudy();};
+ $("#readingToggle").onchange=renderStudy;
+ $("#revealStudy").onclick=()=>{revealedStudy=!revealedStudy;renderStudy();};
+ $("#studyPrev").onclick=()=>stepStudy(-1);
+ $("#studyNext").onclick=()=>stepStudy(1);
+ $("#listenFull").onclick=()=>speakLines(currentStudy().readings);
+ $("#listenUpper").onclick=()=>speakLines(currentStudy().readings.slice(0,3));
+ $("#listenFirst").onclick=()=>speakLines(currentStudy().readings.slice(0,1));
+ $("#stopAudio").onclick=stopSpeak;
+ $("#startTest").onclick=startTest;
+ $("#testSpeakFirst").onclick=()=>speakLines(currentTest().readings.slice(0,1));
+ $("#testShowAnswer").onclick=showTestAnswer;
+ $$("#panel-test .grade-test").forEach(b=>b.onclick=()=>testGrade(b.dataset.grade));
+ $("#testFormat").onchange=()=>{if(currentTest())renderTest();};
+ $("#searchPoems").oninput=renderList;
+ $("#filterPoems").onchange=renderList;
+ $("#startDate").onchange=()=>{
+   if(!$("#startDate").value){toast("学習開始日を指定してください。");return;}
+   state.startDate=$("#startDate").value;save();renderPlan();setStudyPool();
+ };
+ $("#rate").oninput=()=>{
+   state.rate=Number($("#rate").value);save();$("#rateLabel").textContent=state.rate.toFixed(2)+"倍";
+ };
+ $("#exportData").onclick=downloadBackup;
+ $("#importData").onchange=async(e)=>{
+   const f=e.target.files&&e.target.files[0];if(!f)return;
+   try{
+     const d=JSON.parse(await f.text());
+     if(!d || typeof d.startDate!=="string" || !d.scores || typeof d.scores!=="object" || Array.isArray(d.scores))throw new Error("bad format");
+     if(!confirm("現在の成績を、保存したデータで置き換えますか？"))return;
+     state={startDate:d.startDate, rate:Number(d.rate)||0.85, scores:d.scores};
+     save();refreshStats();renderPlan();setStudyPool();toast("成績を読み込みました。");
+   }catch(err){toast("成績ファイルを読み込めませんでした。");}
+   e.target.value="";
+ };
+ $("#resetData").onclick=()=>{
+   if(!confirm("100首すべての学習成績を消去しますか？ この操作は元に戻せません。"))return;
+   state=defaultState();save();refreshStats();renderPlan();setStudyPool();toast("成績を初期化しました。");
+ };
+ renderPlan();renderList();
+ if(!speechAvailable())toast("音声機能が使えない環境です。対応ブラウザで開いてください。");
+}
+initialize();
+</script>
+
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./service-worker.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
