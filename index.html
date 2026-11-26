@@ -121,6 +121,14 @@
     .pane{padding-bottom:calc(38px + env(safe-area-inset-bottom, 0px));}
   }
 </style>
+<style>
+  /* Scene illustrations: keep the entire image visible, including on mobile. */
+  .scene-figure{margin:14px 0 0;text-align:center}
+  .scene-figure[hidden]{display:none}
+  .scene-figure img{display:block;width:100%;height:auto;max-height:420px;object-fit:contain;margin:0 auto;border-radius:10px}
+  .scene-figure figcaption{margin-top:5px;font-size:12px;color:var(--muted)}
+  @media(max-width:740px){.scene-figure img{max-height:340px}}
+</style>
 </head>
 <body>
 <header class="hero">
@@ -164,6 +172,7 @@
         <div class="wakahead"><span class="wakano" id="studyNumber">第1首</span><span class="pill" id="studyLabel">未学習</span></div>
         <div class="waka-lines" id="studyLines"></div>
         <div class="author" id="studyAuthor"></div>
+        <figure class="scene-figure" id="studyScene" hidden></figure>
       </div>
       <div class="panel controls">
         <div class="group">
@@ -234,6 +243,7 @@
         <div id="answerArea" class="test-result" style="display:none">
           <p style="text-align:center" class="subheading">正解・全文</p>
           <div class="test-lines" id="answerLines"></div>
+          <figure class="scene-figure" id="testScene" hidden></figure>
           <p id="typeCompare" class="small" style="text-align:center"></p>
           <p class="small" style="text-align:center">答えを見る前に暗唱できたかを採点</p>
           <div class="test-controls">
@@ -387,6 +397,41 @@ function setStudyPool(preferId){
   revealedStudy=false;renderStudy();
 }
 function currentStudy(){return studySeq[studyPos]||POEMS[0];}
+
+/* Scene assets are local to GitHub Pages. Seed with verified files; refresh from the manifest for future additions. */
+const sceneFiles=new Map([[18,"018.webp"],[38,"038.webp"],[39,"039.webp"],[40,"040.webp"],[41,"041.webp"],[42,"042.webp"],[43,"043.webp"],[44,"044.webp"],[45,"045.webp"],[46,"046.webp"],[47,"047.webp"],[48,"048.webp"],[49,"049.webp"],[50,"050.webp"],[51,"051.webp"],[52,"052.webp"],[53,"053.webp"],[54,"054.webp"],[55,"055.webp"],[56,"056.webp"],[57,"057.webp"],[58,"058.webp"],[59,"059.webp"],[60,"060.webp"],[61,"061.webp"],[62,"062.webp"],[63,"063.webp"],[64,"064.webp"],[65,"065.webp"],[66,"066.webp"],[67,"067.webp"],[68,"068.webp"],[69,"069.webp"],[70,"070.webp"],[71,"071.webp"],[72,"072.webp"],[73,"073.webp"],[74,"074.webp"],[75,"075.webp"],[76,"076.webp"],[77,"077.webp"],[78,"078.webp"],[79,"079.webp"],[80,"080.webp"],[81,"081.webp"],[82,"082.webp"],[83,"083.webp"],[84,"084.webp"],[85,"085.webp"],[86,"086.webp"],[87,"087.webp"],[88,"088.webp"],[89,"089.webp"],[90,"090.webp"],[91,"091.webp"],[92,"092.webp"],[93,"093.webp"],[94,"094.webp"],[95,"095.webp"],[96,"096.webp"],[97,"097.webp"],[98,"098.webp"],[99,"099.webp"],[100,"100.webp"]]);
+function renderScene(host,id){
+  const file=sceneFiles.get(id);
+  if(!file){host.hidden=true;host.replaceChildren();delete host.dataset.scene;return;}
+  if(host.dataset.scene===file)return;
+  host.hidden=true;host.replaceChildren();host.dataset.scene=file;
+  const img=document.createElement("img");
+  const caption=document.createElement("figcaption");
+  img.alt="第"+id+"首の情景画";
+  caption.textContent=img.alt;
+  img.decoding="async";
+  img.onload=()=>{if(img.parentNode===host)host.hidden=false;};
+  img.onerror=()=>{if(img.parentNode===host){host.hidden=true;host.replaceChildren();delete host.dataset.scene;}};
+  host.append(img,caption);
+  img.src="./scenes/"+file;
+  if(img.complete&&img.naturalWidth>0)host.hidden=false;
+}
+async function loadSceneManifest(){
+  try{
+    const response=await fetch("./scenes/manifest.json",{cache:"no-cache"});
+    if(!response.ok)return;
+    const data=await response.json();
+    if(!Array.isArray(data.images))return;
+    for(const item of data.images){
+      if(item&&Number.isInteger(item.id)&&item.id>=1&&item.id<=100&&typeof item.file==="string"&&/^\d{3}\.webp$/.test(item.file)&&Number(item.file.slice(0,3))===item.id){
+        sceneFiles.set(item.id,item.file);
+      }
+    }
+    renderScene($("#studyScene"),currentStudy().id);
+    if(test.revealed&&currentTest())renderScene($("#testScene"),currentTest().id);
+  }catch(e){/* Offline: use the verified bundled map; missing pictures never block learning. */}
+}
+
 function renderStudy(){
  const p=currentStudy();if(!p)return;
  const hint=$("#hintMode").value;
@@ -395,6 +440,7 @@ function renderStudy(){
  $("#studyNumber").textContent=`第${p.id}首`;
  $("#studyLabel").textContent=gradeLabel(getScore(p.id));
  $("#studyAuthor").textContent=p.author;
+ renderScene($("#studyScene"),p.id);
  $("#studyCounter").textContent=`現在の範囲 ${studyPos+1} / ${studySeq.length}首`;
  $("#studyLines").innerHTML=p.lines.map((line,i)=>{
    const display=revealedStudy||i<n;
@@ -453,6 +499,7 @@ function renderTest(){
  $("#testScore").textContent=`○ ${test.grades.filter(x=>x==="good").length} / △ ${test.grades.filter(x=>x==="so").length} / × ${test.grades.filter(x=>x==="bad").length}`;
  $("#testCue").textContent=p.lines[0];
  $("#answerArea").style.display="none";
+ $("#testScene").hidden=true;$("#testScene").replaceChildren();delete $("#testScene").dataset.scene;
  $("#writeArea").style.display=$("#testFormat").value==="write"?"block":"none";
  $("#typedAnswer").value="";
 }
@@ -460,6 +507,7 @@ function showTestAnswer(){
  const p=currentTest();if(!p)return;
  test.revealed=true;$("#answerArea").style.display="block";
  $("#answerLines").innerHTML=p.lines.map((l,i)=>`<div>${esc(l)}</div>`).join("");
+ renderScene($("#testScene"),p.id);
  const text=$("#typedAnswer").value.trim();
  const expected=p.lines.slice(1).join("");
  const clean=s=>s.replace(/[\s　、。・!！?？,，]/g,"");
@@ -573,6 +621,7 @@ function initialize(){
  if(!speechAvailable())toast("音声機能が使えない環境です。対応ブラウザで開いてください。");
 }
 initialize();
+loadSceneManifest();
 </script>
 
 <script>
